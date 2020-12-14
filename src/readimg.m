@@ -1,6 +1,6 @@
 function I = readimg(sign, n, frame)
     if nargin < 3
-        frame = 1;
+        frame = 0;
     end
     
     if sign <= 17
