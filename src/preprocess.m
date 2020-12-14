@@ -1,4 +1,7 @@
 function O = preprocess(I)
-    O = imreducehaze(I);
+    A = imcomplement(I);
+    % B = imreducehaze(A, 'ContrastEnhancement', 'none');
+    B = imreducehaze(A, 'Method','approx','ContrastEnhancement','boost');
+    O = imcomplement(B);
 end
 
