@@ -1,20 +1,9 @@
-filePattern = fullfile('../images/Train/**', '*.png');
-theFiles = dir(filePattern);
+warning('off', 'images:bwfilt:tie');
 
-M = zeros(length(theFiles), 30);
+trainPattern = fullfile('../images/Train/**', '*.png');
+train = processFolder(trainPattern);
+writematrix(train, 'train_desc.csv');
 
-for k = 1 : length(theFiles)
-    baseFileName = theFiles(k).name;
-    fullFileName = fullfile(theFiles(k).folder, baseFileName);
-    
-    disp(fullFileName)
-    
-    I = imread(fullFileName);
-
-    desc = descriptorsExtranction(I);
-    desc = reshape(cell2mat(struct2cell(desc)), 1, []);
-    
-    M(k,:) = desc;
-end
-
-writematrix(M, 'M.csv')
+testPattern = fullfile('../images/Test/**', '*.png');
+test = processFolder(testPattern);
+writematrix(test, 'test_desc.csv');
