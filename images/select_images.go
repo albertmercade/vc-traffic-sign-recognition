@@ -13,8 +13,9 @@ func format(d int) string {
 	return fmt.Sprintf("%05d", d)
 }
 
-func main() {
+const percent = 0.8
 
+func main() {
 	os.RemoveAll("Train")
 	os.RemoveAll("Test")
 
@@ -28,33 +29,42 @@ func main() {
 	w := bufio.NewWriter(f)
 	defer w.Flush()
 
-	for f := 0; f <= 42; f += 1 {
+	for f := 0; f <= 42; f++ {
 		dir := filepath.Join("All", format(f))
 
 		files, _ := ioutil.ReadDir(dir)
 		numFiles := len(files)
 
-		keep := int(float64(numFiles) * 0.8)
+		keep := int(float64(numFiles) * percent)
 
 		l := rand.Perm(numFiles)
 
 		train := l[:keep]
 		test := l[keep:]
 
-		create_links("Train", f, train)
-		create_links("Test", f, test)
+		createLinks("Train", f, train)
+		createLinks("Test", f, test)
 
-		w.WriteString(fmt.Sprintln(f, train, test))
-
+		if _, err := w.WriteString(fmt.Sprintln(f, train, test)); err != nil {
+			panic(err)
+		}
 	}
 }
 
-func create_links(folder string, img int, files []int) {
+func createLinks(folder string, img int, files []int) {
 	for _, f := range files {
 		shared := filepath.Join(format(img), format(f))
 		target := filepath.Join("..", "..", "All", shared)
 		filename := filepath.Join(folder, shared)
-		os.MkdirAll(filepath.Dir(filename), 0700)
-		os.Symlink(target, filename)
+
+		err := os.MkdirAll(filepath.Dir(filename), 0700)
+		if err != nil {
+			panic(err)
+		}
+
+		err = os.Symlink(target, filename)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
