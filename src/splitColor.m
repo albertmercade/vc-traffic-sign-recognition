@@ -1,4 +1,4 @@
-function [red, blue, yellow, black, white] = splitColor(img, maxDist)
+function colors = splitColor(img, maxDist)
     if (nargin < 2)
         maxDist = 0.5;
     end
@@ -27,6 +27,8 @@ function [red, blue, yellow, black, white] = splitColor(img, maxDist)
     red    = rD < bD & rD < yD & rD < kD & rD < wD & rD < maxDist;
     blue   = bD < rD & bD < yD & bD < kD & bD < wD & bD < maxDist;
     yellow = yD < rD & yD < bD & yD < kD & yD < wD & yD < maxDist;
+    
+    colors = cat(3, red, blue, yellow, black, white);
 end
 
 function [dist] = distance(H, S, V, H2, S2, V2)
