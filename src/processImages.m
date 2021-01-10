@@ -12,7 +12,7 @@ train = processFolder(trainPattern);
 
 train = array2table(train);
 train.Properties.VariableNames = varNames;
-writematrix(train, 'train_desc.csv');
+writetable(train, 'train_desc.csv');
 
 testPattern = fullfile('../images/Test/**', '*.png');
 test = processFolder(testPattern);
@@ -20,5 +20,4 @@ test = processFolder(testPattern);
 test = array2table(test);
 test.Properties.VariableNames = varNames;
 
-writematrix(test, 'test_desc.csv');
-
+writetable(test, 'test_desc.csv');
