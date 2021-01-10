@@ -3,6 +3,9 @@ function rp = descriptors(shape, prominenceTh)
         prominenceTh = 0.03;
     end
     
+    % Remove artifacts that touch borders
+    shape = imclearborder(shape);
+    
     % select largest area
     shape = bwareafilt(shape, 1);
     
