@@ -1,6 +1,6 @@
 warning('off', 'images:bwfilt:tie');
 
-desc = ["Circularity", "EulerNumber", "Extent", "numPeaks", "maxMinDiff", "ratioArea"];
+desc = ["Circularity", "Eccentricity", "EulerNumber", "Extent", "numPeaks", "maxMinDiff", "ratioArea"];
 colors = ["red", "blue", "yellow", "black", "white"];
 
 [m, n] = ndgrid(desc, colors);

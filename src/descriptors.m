@@ -10,7 +10,7 @@ function rp = descriptors(shape, prominenceTh)
     shape = bwareafilt(shape, 1);
     
     % region props
-    rp = regionprops(shape,'Centroid', 'Circularity', 'EulerNumber', 'Extent');
+    rp = regionprops(shape,'Centroid', 'Circularity', 'Eccentricity', 'EulerNumber', 'Extent');
     
     totalPixels = numel(shape);
     numWhitePixels = sum(shape(:));
@@ -18,7 +18,8 @@ function rp = descriptors(shape, prominenceTh)
     
     if (ratio < 0.05 || isempty(rp))
         % EulerNumber = 2 (since in our case it ranges from -infty to 1)
-        rp = struct('Circularity', {0}, 'EulerNumber',  {2}, 'Extent', {0}, 'numPeaks', {0}, 'maxMinDiff', {0}, 'ratioArea', {ratio});
+        % Eccentricity = 2 (0 is circle, 1 is line)
+        rp = struct('Circularity', {0}, 'Eccentricity', {2}, 'EulerNumber',  {2}, 'Extent', {0}, 'numPeaks', {0}, 'maxMinDiff', {0}, 'ratioArea', {ratio});
         return;
     end
     
