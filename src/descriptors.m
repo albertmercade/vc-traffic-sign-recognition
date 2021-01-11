@@ -10,14 +10,14 @@ function rp = descriptors(shape, prominenceTh)
     shape = bwareafilt(shape, 1);
     
     % region props
-    rp = regionprops(shape,'Centroid','Circularity', 'Extent', 'EulerNumber');
+    rp = regionprops(shape,'Centroid', 'Circularity', 'EulerNumber', 'Extent');
     
     totalPixels = numel(shape);
     numWhitePixels = sum(shape(:));
     ratio = numWhitePixels  / totalPixels;
     
     if (ratio < 0.05 || isempty(rp))
-        rp = struct('Circularity', {-1}, 'Extent', {-1}, 'EulerNumber', {-1},'numPeaks', {-1}, 'maxMinDiff', {-1}, 'ratioArea', {ratio});
+        rp = struct('Circularity', {-1}, 'EulerNumber',  {-1}, 'Extent', {-1}, 'numPeaks', {-1}, 'maxMinDiff', {-1}, 'ratioArea', {ratio});
         return;
     end
     
