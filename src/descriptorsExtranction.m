@@ -4,6 +4,7 @@ function [desc] = descriptorsExtranction(I, prominenceTh)
     end
 
     I = preprocess(I);
+    I = resizeImage(I);
     
     colors = splitColor(I);
     
