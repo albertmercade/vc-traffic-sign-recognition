@@ -18,7 +18,7 @@ function rp = descriptors(shape, prominenceTh)
     
     if (ratio < 0.05 || isempty(rp))
         % EulerNumber = 2 (since in our case it ranges from -infty to 1)
-        rp = struct('Circularity', {-1}, 'EulerNumber',  {2}, 'Extent', {-1}, 'numPeaks', {-1}, 'maxMinDiff', {-1}, 'ratioArea', {ratio});
+        rp = struct('Circularity', {0}, 'EulerNumber',  {2}, 'Extent', {0}, 'numPeaks', {0}, 'maxMinDiff', {0}, 'ratioArea', {ratio});
         return;
     end
     
