@@ -17,7 +17,8 @@ function rp = descriptors(shape, prominenceTh)
     ratio = numWhitePixels  / totalPixels;
     
     if (ratio < 0.05 || isempty(rp))
-        rp = struct('Circularity', {-1}, 'EulerNumber',  {-1}, 'Extent', {-1}, 'numPeaks', {-1}, 'maxMinDiff', {-1}, 'ratioArea', {ratio});
+        % EulerNumber = 2 (since in our case it ranges from -infty to 1)
+        rp = struct('Circularity', {-1}, 'EulerNumber',  {2}, 'Extent', {-1}, 'numPeaks', {-1}, 'maxMinDiff', {-1}, 'ratioArea', {ratio});
         return;
     end
     
