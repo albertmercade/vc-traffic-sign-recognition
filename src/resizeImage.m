@@ -3,7 +3,7 @@ function resizedI = resizeImage(I)
     
     maxArea = 0;
     bb = [1 1 1 1];
-    for i = 1 : size(colors,3)
+    for i = 1 : 3;
        rC = preprocessChannel(colors(:,:,i));
        rp = regionprops(rC, 'Area', 'BoundingBox');
        if isempty(rp)

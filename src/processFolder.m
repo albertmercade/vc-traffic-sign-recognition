@@ -1,10 +1,12 @@
 function [M] = processFolder(filePattern)
     theFiles = dir(filePattern);
 
-    cols = descriptorsExtranction(zeros(1,1,3));
-    cols = length(fieldnames(cols)) * size(cols, 2) + 1;
+    %cols = descriptorsExtranction(zeros(1,1,3));
+    %cols = length(fieldnames(cols)) * size(cols, 2) + 1;
     
-    M = zeros(length(theFiles), cols);
+    M = table();
+    
+    Y = [];
 
     parfor k = 1 : length(theFiles)
         baseFileName = theFiles(k).name;
@@ -15,12 +17,13 @@ function [M] = processFolder(filePattern)
         I = imread(fullFileName);
 
         desc = descriptorsExtranction(I);
-        desc = reshape(cell2mat(struct2cell(desc)), 1, []);
+        desc = flattenshit(desc);
+        desc = struct2table(desc, 'AsArray', true);
+        M = [M; desc];
         
         splited = split(fullFileName, ["/", "."]);
-        desc(end+1) = str2double(cell2mat(splited(end-3)));
-
-        M(k,:) = desc;
+        Y = [Y; str2double(cell2mat(splited(end-3)))];
     end
+    M.Sign = Y;
 end
 

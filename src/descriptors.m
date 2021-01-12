@@ -57,28 +57,82 @@
 function desc = descriptors(I)
     colors = splitColor(I);
     
+    % Extract shape masks for background colors.
     [mask.white, shape.white] = shapeMask(colors.white);
     [mask.red, shape.red] = shapeMask(colors.red);
     [mask.blue, shape.blue] = shapeMask(colors.blue);
     
+    % Mask for white signals with red border
     mask.redWhite = mask.red & mask.white;
     
-    % Black on white
-    symbols.blackWhite = colors.black & mask.white;
+    % Basic Signals (red white && blue)
     
+    % Black on white (with red border)
+    symbols.blackWhiteR = colors.black & mask.redWhite;
     % White on blue
     symbols.whiteBlue = colors.white & mask.blue;
     
-    % red on white
-    symbols.redWhite = colors.red & mask.redWhite;
-    % white on red
+    % Special signals
     
-    % yellow on white
+    % red on white (9, 10)
+    symbols.redWhite = colors.red & mask.redWhite;
+    % white on red (14, 17)
+    symbols.whiteRed = colors.white & mask.red;
+    % Black on white (41, 42) (Without red)
+    symbols.blackWhite = colors.black & mask.white;
+    
+    % yellow on white (12)
+    symbols.yellowWhite = colors.yellow & mask.white;
+    
+    emptyAux = struct("Circularity", {}, "Eccentricity", {}, "EulerNumber", {}, "Extent", {});
+    emptyShape.fg = emptyAux;
+    emptyShape.bg = emptyAux;
+    
+    desc.blackWhiteR = emptyShape;
+    desc.redWhite = emptyShape;
+    desc.blackWhite = emptyShape;
+    desc.yellowWhite = emptyShape;
+    desc.whiteBlue = emptyShape;
+    desc.whiteRed = emptyShape;
+    
+    if shape.white ~= "empty"
+        desc.blackWhiteR = descriptorsSymbols(symbols.blackWhiteR, mask.redWhite);
+        desc.redWhite = descriptorsSymbols(symbols.redWhite, mask.redWhite);
+        
+        desc.blackWhite = descriptorsSymbols(symbols.blackWhite, mask.white);
+        desc.yellowWhite = descriptorsSymbols(symbols.yellowWhite, mask.white);
+    end
+    
+    if shape.blue ~= "empty"
+        desc.whiteBlue = descriptorsSymbols(symbols.whiteBlue, mask.blue);
+    end
+    if shape.red ~= "empty"
+        desc.whiteRed = descriptorsSymbols(symbols.whiteRed, mask.red);
+    end
+    
+    desc.shape = shape;
+    
+    %desc.symbols = symbols;
     
 end
 
+function desc = descriptorsSymbols(symbols, background)
+    bgProps = regionprops(background, ...
+        'Centroid', 'Circularity', 'Eccentricity', 'EulerNumber', 'Extent', 'Area');
 
-function [mask, circle] = shapeMask(channel)
+    if ~isempty(bgProps)
+        symbols = bwareaopen(symbols, fix(bgProps(1).Area*0.02));
+    end
+    
+    fgProps = regionprops(symbols, ...
+        'Centroid', 'Circularity', 'Eccentricity', 'EulerNumber', 'Extent', 'Area');
+
+    desc.bg = rmfield(bgProps,["Centroid", "Area"]);
+    desc.fg = rmfield(fgProps,["Centroid", "Area"]);
+end
+
+
+function [mask, shape] = shapeMask(channel)
     [height, width] = size(channel);
     
     [centre, radius] = imfindcircles(channel,[int16(width/5),int16(width/2)]);
