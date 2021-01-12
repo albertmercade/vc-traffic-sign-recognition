@@ -54,19 +54,43 @@
 %     % remove unnecesary field
 %     rp = rmfield(rp,'Centroid');
 % end
+function desc = descriptors(I)
+    colors = splitColor(I);
+    
+    [mask.white, shape.white] = shapeMask(colors.white);
+    [mask.red, shape.red] = shapeMask(colors.red);
+    [mask.blue, shape.blue] = shapeMask(colors.blue);
+    
+    mask.redWhite = mask.red & mask.white;
+    
+    % Black on white
+    symbols.blackWhite = colors.black & mask.white;
+    
+    % White on blue
+    symbols.whiteBlue = colors.white & mask.blue;
+    
+    % red on white
+    symbols.redWhite = colors.red & mask.redWhite;
+    % white on red
+    
+    % yellow on white
+    
+end
 
 
-
-function mask = descriptors(channel)
+function [mask, circle] = shapeMask(channel)
     [height, width] = size(channel);
     
     [centre, radius] = imfindcircles(channel,[int16(width/5),int16(width/2)]);
     
     if (size(centre,1) > 0 && sum((centre - [height, width]/2).^2)^0.5 < width/5)
+        shape = 'circle';
         mask = circleMask(centre,radius,[height, width]);
     else
+        shape = 'poly';
         mask = polyMask(channel, height, width, 5, 2.5);
         if size(mask,1) == 1
+            shape = 'empty';
             mask = zeros(height,width);
             % mask = preprocessChannel(channel);
         end

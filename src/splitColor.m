@@ -9,8 +9,8 @@ function colors = splitColor(img, maxDist)
     Saux = S < avgS;
     avgV = mean2(V(Saux));
     
-    black = V < avgV;
-    white = V >= avgV & S < avgS;
+    colors.black = V < avgV;
+    colors.white = V >= avgV & S < avgS;
     
     r = num2cell([0.0139, 0.786, 0.786]);
     b = num2cell([0.5889, 0.78, 0.61]);
@@ -24,11 +24,9 @@ function colors = splitColor(img, maxDist)
     kD = distance(k{:}, H, S, V);
     wD = distance(w{:}, H, S, V);
     
-    red    = rD < bD & rD < yD & rD < kD & rD < wD & rD < maxDist;
-    blue   = bD < rD & bD < yD & bD < kD & bD < wD & bD < maxDist;
-    yellow = yD < rD & yD < bD & yD < kD & yD < wD & yD < maxDist;
-    
-    colors = cat(3, red, blue, yellow, black, white);
+    colors.red    = rD < bD & rD < yD & rD < kD & rD < wD & rD < maxDist;
+    colors.blue   = bD < rD & bD < yD & bD < kD & bD < wD & bD < maxDist;
+    colors.yellow = yD < rD & yD < bD & yD < kD & yD < wD & yD < maxDist;
 end
 
 function [dist] = distance(H, S, V, H2, S2, V2)
