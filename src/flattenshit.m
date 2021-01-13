@@ -9,22 +9,25 @@ function flat = flattenshit(shit)
             end
         else
             fg = shit.(names(i)).fg;
-            bg = shit.(names(i)).bg;
-            gNames = string(fieldnames(fg));
-            for j = 1:length(gNames)
-                
-                if isempty(bg)
-                    bgShit = {};
-                else
-                    bgShit = bg.(gNames(j));
-                end
+            fgNames = string(fieldnames(fg));
+            for j = 1:length(fgNames)
                 if isempty(fg)
                     fgShit = {};
                 else
-                    fgShit = fg.(gNames(j));
+                    fgShit = fg.(fgNames(j));
                 end
-                flat.(names(i) + "_fg_" + gNames(j)) = fgShit;
-                flat.(names(i) + "_bg_" + gNames(j)) = bgShit;
+                flat.(names(i) + "_fg_" + fgNames(j)) = fgShit;
+            end
+            
+            bg = shit.(names(i)).bg;
+            bgNames = string(fieldnames(bg));
+            for j = 1:length(bgNames)
+                if isempty(bg)
+                    bgShit = {};
+                else
+                    bgShit = bg.(bgNames(j));
+                end
+                flat.(names(i) + "_bg_" + bgNames(j)) = bgShit;
             end
         end
     end

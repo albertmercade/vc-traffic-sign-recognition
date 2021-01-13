@@ -71,7 +71,7 @@ function desc = descriptors(I)
 end
 
 function emptyAux = emptyAuxStruct()
-    emptyAux = struct("Circularity", 2, "Eccentricity", 2, "EulerNumber", 2, "Extent", 0);
+    emptyAux = struct("Solidity", 2, "Eccentricity", 2, "EulerNumber", 2, "Extent", 0);
 end
 
 function desc = descriptorsSymbols(symbols, background)
@@ -79,20 +79,42 @@ function desc = descriptorsSymbols(symbols, background)
     background = imfill(bg, 'holes');
     
     bgProps = regionprops(background, ...
-        'Centroid', 'Circularity', 'Eccentricity', 'EulerNumber', 'Extent', 'Area');
+        'Centroid', 'Solidity', 'Eccentricity', 'EulerNumber', 'Extent', 'Area', 'BoundingBox');
 
+    bgWidth = bgProps.BoundingBox(3);
+    
     if ~isempty(bgProps)
         symbols = bwareaopen(symbols, fix(bgProps(1).Area*0.02));
     end
     
     symbols = bwmorph(symbols, 'close');
-    symbols = bwareafilt(symbols, 1);
+    symbols = bwareafilt(symbols, 4);
     
     fgProps = regionprops(symbols, ...
-        'Centroid', 'Circularity', 'Eccentricity', 'EulerNumber', 'Extent', 'Area');
+        'Centroid', 'Solidity', 'Eccentricity', 'EulerNumber', 'Extent', 'Area');
+    
+    newFgProps.numel = size(fgProps,1);
+    
+    for i = 1:4
+        newFgProps.("CentroidDistance"+int2str(i)) = -1;
+        newFgProps.("Solidity"+int2str(i)) = 2;
+        newFgProps.("Eccentricity"+int2str(i)) = 2;
+        newFgProps.("EulerNumber"+int2str(i)) = 2;
+        newFgProps.("Extent"+int2str(i)) = 0;
+    end
+    
+    fgAux = struct2array(fgProps);
+    fgAux = reshape(fgAux,7,[])';
+    for i = 1:size(fgAux,1)
+        newFgProps.("CentroidDistance"+int2str(i)) = pdist([fgAux(i,2:3);bgProps.Centroid],'euclidean')/bgWidth;
+        newFgProps.("Solidity"+int2str(i)) = fgAux(i,7);
+        newFgProps.("Eccentricity"+int2str(i)) = fgAux(i,4);
+        newFgProps.("EulerNumber"+int2str(i)) = fgAux(i,5);
+        newFgProps.("Extent"+int2str(i)) = fgAux(i,6);
+    end
 
-    desc.bg = rmfield(bgProps,["Centroid", "Area"]);
-    desc.fg = rmfield(fgProps,["Centroid", "Area"]);
+    desc.bg = rmfield(bgProps,["Centroid", "Area", "BoundingBox"]);    
+    desc.fg = newFgProps;
     
     if isempty(desc.bg)
         desc.bg = emptyAuxStruct();
@@ -100,14 +122,6 @@ function desc = descriptorsSymbols(symbols, background)
     
     if isempty(desc.fg)
         desc.fg = emptyAuxStruct();
-    end
-    
-    if desc.bg.Circularity > 5
-        desc.bg.Circularity = 5;
-    end
-    
-    if desc.fg.Circularity > 5
-        desc.fg.Circularity = 5;
     end
 end
 
