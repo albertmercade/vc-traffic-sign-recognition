@@ -78,11 +78,13 @@ function emptyAux = emptyAuxFgStruct()
     emptyAux.numel = 0;
     
     for i = 1:4
-        emptyAux.("CentroidDistance"+int2str(i)) = -1;
+        emptyAux.("CentroidDistanceX"+int2str(i)) = -1;
+        emptyAux.("CentroidDistanceY"+int2str(i)) = -1;
         emptyAux.("Solidity"+int2str(i)) = 2;
         emptyAux.("Eccentricity"+int2str(i)) = 2;
         emptyAux.("EulerNumber"+int2str(i)) = 2;
         emptyAux.("Extent"+int2str(i)) = 0;
+        emptyAux.("AreaCoverage" + int2str(i)) = 0;
     end
 end
 
@@ -117,16 +119,19 @@ function desc = descriptorsSymbols(symbols, background)
         newFgProps.("Eccentricity"+int2str(i)) = 2;
         newFgProps.("EulerNumber"+int2str(i)) = 2;
         newFgProps.("Extent"+int2str(i)) = 0;
+        newFgProps.("AreaCoverage" + int2str(i)) = 0;
     end
     
     fgAux = struct2array(fgProps);
     fgAux = reshape(fgAux,7,[])';
     for i = 1:size(fgAux,1)
-        newFgProps.("CentroidDistance"+int2str(i)) = pdist([fgAux(i,2:3);bgProps.Centroid],'euclidean')/bgWidth;
+        newFgProps.("CentroidDistanceX"+int2str(i)) = (fgAux(i,2) - bgProps.Centroid(1))/bgWidth;
+        newFgProps.("CentroidDistanceY"+int2str(i)) = (fgAux(i,3) - bgProps.Centroid(2))/bgWidth;
         newFgProps.("Solidity"+int2str(i)) = fgAux(i,7);
         newFgProps.("Eccentricity"+int2str(i)) = fgAux(i,4);
         newFgProps.("EulerNumber"+int2str(i)) = fgAux(i,5);
         newFgProps.("Extent"+int2str(i)) = fgAux(i,6);
+        newFgProps.("AreaCoverage" + int2str(i)) = fgAux(i,1)/bgProps.Area;
     end
 
     desc.bg = rmfield(bgProps,["Centroid", "Area", "BoundingBox"]);    
