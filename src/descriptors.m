@@ -7,7 +7,17 @@ function desc = descriptors(I)
     [mask.blue, shape.blue] = shapeMask(colors.blue);
     
     % Mask for white signals with red border
-    mask.redWhite = mask.red & mask.white;
+    if string(shape.red) == string(shape.white)
+        mask.redWhite = mask.red & mask.white;
+    else
+        if shape.red == "circle"
+            mask.redWhite = mask.red;
+        elseif shape.white == "circle"
+            mask.redWhite = mask.white;
+        else
+            mask.redWhite = mask.red | mask.white;
+        end
+    end
     
     % Basic Signals (red white && blue)
     
