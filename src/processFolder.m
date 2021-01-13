@@ -16,6 +16,7 @@ function [M] = processFolder(filePattern)
         desc = descriptorsExtranction(I);
         desc = flattenshit(desc);
         desc = struct2table(desc, 'AsArray', true);
+
         M = [M; desc];
 
         splited = split(fullFileName, ["/", "."]);

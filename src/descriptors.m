@@ -38,9 +38,8 @@ function desc = descriptors(I)
     % yellow on white (12)
     symbols.yellowWhite = colors.yellow & mask.white;
     
-    emptyAux = emptyAuxStruct();
-    emptyShape.fg = emptyAux;
-    emptyShape.bg = emptyAux;
+    emptyShape.fg = emptyAuxFgStruct();
+    emptyShape.bg = emptyAuxBgStruct();
     
     desc.blackWhiteR = emptyShape;
     desc.redWhite = emptyShape;
@@ -70,8 +69,21 @@ function desc = descriptors(I)
     
 end
 
-function emptyAux = emptyAuxStruct()
+function emptyAux = emptyAuxBgStruct()
     emptyAux = struct("Solidity", 2, "Eccentricity", 2, "EulerNumber", 2, "Extent", 0);
+end
+
+
+function emptyAux = emptyAuxFgStruct()
+    emptyAux.numel = 0;
+    
+    for i = 1:4
+        emptyAux.("CentroidDistance"+int2str(i)) = -1;
+        emptyAux.("Solidity"+int2str(i)) = 2;
+        emptyAux.("Eccentricity"+int2str(i)) = 2;
+        emptyAux.("EulerNumber"+int2str(i)) = 2;
+        emptyAux.("Extent"+int2str(i)) = 0;
+    end
 end
 
 function desc = descriptorsSymbols(symbols, background)
@@ -80,12 +92,16 @@ function desc = descriptorsSymbols(symbols, background)
     
     bgProps = regionprops(background, ...
         'Centroid', 'Solidity', 'Eccentricity', 'EulerNumber', 'Extent', 'Area', 'BoundingBox');
-
-    bgWidth = bgProps.BoundingBox(3);
     
-    if ~isempty(bgProps)
-        symbols = bwareaopen(symbols, fix(bgProps(1).Area*0.02));
+    if isempty(bgProps)
+        desc.fg = emptyAuxFgStruct();
+        desc.bg = emptyAuxBgStruct();
+        return;
     end
+
+    bgWidth = bgProps(1).BoundingBox(3);
+
+    symbols = bwareaopen(symbols, fix(bgProps(1).Area*0.02));
     
     symbols = bwmorph(symbols, 'close');
     symbols = bwareafilt(symbols, 4);
@@ -115,14 +131,6 @@ function desc = descriptorsSymbols(symbols, background)
 
     desc.bg = rmfield(bgProps,["Centroid", "Area", "BoundingBox"]);    
     desc.fg = newFgProps;
-    
-    if isempty(desc.bg)
-        desc.bg = emptyAuxStruct();
-    end
-    
-    if isempty(desc.fg)
-        desc.fg = emptyAuxStruct();
-    end
 end
 
 
