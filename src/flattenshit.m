@@ -2,10 +2,9 @@ function flat = flattenshit(shit)
     names = string(fieldnames(shit));
     for i = 1:length(names)
         if names(i) == "shape"
-            disp(string(names(i)));
             shapes = shit.(names(i));
             shapeNames = string(fieldnames(shapes));
-            for j = 1:length(shapes)
+            for j = 1:length(shapeNames)
                 flat.("shape_" + shapeNames(j)) = shapes.(shapeNames(j));
             end
         else
