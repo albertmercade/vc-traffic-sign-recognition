@@ -129,7 +129,7 @@ end
 function [mask, shape] = shapeMask(channel)
     [height, width] = size(channel);
     
-    [centre, radius] = imfindcircles(channel,[int16(width/5),int16(width/2)]);
+    [centre, radius] = imfindcircles(channel,[int16(width/7),int16(width/2)]);
     
     if (size(centre, 1) > 0 && sum((centre(1,:) - [height, width]/2).^2)^0.5 < width/5)
         shape = 'circle';
