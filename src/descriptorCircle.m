@@ -8,10 +8,10 @@ function [desc, centre, radius] = descriptorCircle(desc, I)
             centre = [0 0];
             radius = 0;
         end
-    else
-        centre = centre(1,:);
-        radius = radius(1);
     end
+    
+    centre = centre(1,:);
+    radius = radius(1);
     
     desc.CC = pdist([[height/2 width/2]; centre],'euclidean')/width;
     desc.R = radius/width;

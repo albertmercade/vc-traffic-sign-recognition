@@ -13,8 +13,9 @@ function [M] = processFolder(filePattern)
 
         I = imread(fullFileName);
 
-        desc = descriptorsExtranction(I);
-        desc = flattenshit(desc);
+        I = preprocess(I);
+        
+        desc = newDescriptors(I);
         desc = struct2table(desc, 'AsArray', true);
 
         M = [M; desc];

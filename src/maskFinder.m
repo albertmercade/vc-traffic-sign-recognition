@@ -27,6 +27,9 @@ function maskC = circleMask(I, size)
         return;
     end
     
+    centre = centre(1,:);
+    radius = radius(1,:);
+    
     [xx,yy] = ndgrid((1:size(1))-centre(2),(1:size(2))-centre(1));
     maskC = uint8((xx.^2 + yy.^2)<(radius^2));
 end

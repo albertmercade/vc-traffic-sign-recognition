@@ -26,9 +26,16 @@ function [L, DC, PH] = houghpoints(channel, angle)
     [H,theta,rho] = hough(CE, 'Theta', angle);
     P = houghpeaks(H,1, 'Theta', theta);
     lines = houghlines(CE,theta,rho,P,'MinLength', width/6);
+    
+    if isempty(lines)
+        L = 0;
+        DC = [1, 1];
+        PH = 0;
+        return;
+    end
 
-    p1 = struct2table(lines).point1;
-    p2 = struct2table(lines).point2;
+    p1 = struct2table(lines).point1(1,:);
+    p2 = struct2table(lines).point2(1,:);
     
     L = pdist([p1; p2],'euclidean')/width;
     DC = (p1 + p2)/(2 * width);

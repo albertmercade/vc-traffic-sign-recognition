@@ -39,11 +39,11 @@ function desc = descriptorColors(desc, colors, mask)
         'Centroid', 'Solidity', 'Eccentricity', 'EulerNumber', 'Extent');
     
         if isempty(rp)
-            desc.(names(i)+"CentroidDistance"+int2str(j)) = -1;
-            desc.(names(i)+"Solidity"+int2str(j)) = 2;
-            desc.(names(i)+"Eccentricity"+int2str(j)) = 2;
-            desc.(names(i)+"EulerNumber"+int2str(j)) = 2;
-            desc.(names(i)+"Extent"+int2str(j)) = 0;
+            desc.(names(i)+"CentroidDistance") = -1;
+            desc.(names(i)+"Solidity") = 2;
+            desc.(names(i)+"Eccentricity") = 2;
+            desc.(names(i)+"EulerNumber") = 2;
+            desc.(names(i)+"Extent") = 0;
             continue;
         end
         
