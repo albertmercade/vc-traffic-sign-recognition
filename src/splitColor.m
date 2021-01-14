@@ -14,19 +14,25 @@ function colors = splitColor(img, maxDist)
     
     r = num2cell([0.0139, 0.786, 0.786]);
     b = num2cell([0.5889, 0.78, 0.61]);
-    y = num2cell([0.1583, 0.68, 1]);
+    %y = num2cell([0.1583, 0.68, 1]);
     k = num2cell([0, 0, 0]);
     w = num2cell([0, 0, 1]);
     
     rD = distance(r{:}, H, S, V);
     bD = distance(b{:}, H, S, V);
-    yD = distance(y{:}, H, S, V);
+    %yD = distance(y{:}, H, S, V);
     kD = distance(k{:}, H, S, V);
     wD = distance(w{:}, H, S, V);
     
-    colors.red    = rD < bD & rD < yD & rD < kD & rD < wD & rD < maxDist;
-    colors.blue   = bD < rD & bD < yD & bD < kD & bD < wD & bD < maxDist;
-    colors.yellow = yD < rD & yD < bD & yD < kD & yD < wD & yD < maxDist;
+    %colors.red    = rD < bD & rD < yD & rD < kD & rD < wD & rD < maxDist;
+    %colors.blue   = bD < rD & bD < yD & bD < kD & bD < wD & bD < maxDist;
+    %colors.yellow = yD < rD & yD < bD & yD < kD & yD < wD & yD < maxDist;
+    
+    %wD = 5000;
+    kD = 5000;
+    
+    colors.red    = rD < bD & rD < kD & rD < wD & rD < maxDist;
+    colors.blue   = bD < rD & bD < kD & bD < wD & bD < maxDist;
 end
 
 function [dist] = distance(H, S, V, H2, S2, V2)
