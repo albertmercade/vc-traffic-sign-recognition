@@ -29,7 +29,7 @@ function desc = descriptorColors(desc, colors, mask)
         end
     end
     
-    names = ["blue", "red", "yellow"];
+    names = ["blue", "red"];
     for i = 1:length(names)
         C = colors.(names(i)) & mask;
         

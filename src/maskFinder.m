@@ -12,25 +12,26 @@ function [mask, colors, took] = maskFinder(I)
     took = "circle red";
     [mask, ok] = circleMask(colors.red);
     if ok; return; end
-    
-    took = "poly white";
-    mask = reconMask(colors.white);
-    if validateMask(mask); return; end
-    
-    took = "poly blue";
-    mask = reconMask(colors.blue);
-    if validateMask(mask); return; end
-    
-    took = "poly red";
-    mask = reconMask(colors.red);
-    if validateMask(mask); return; end
-    
+
     cr = imclose(colors.red, strel('line', 3, 60));
     cr = imclose(cr, strel('line', 3, 120));
     cr = imclose(cr, strel('line', 3, 0));
     
     took = "poly red inv";
     mask = reconMask(~cr);
+    mask = mask | reconMask(colors.white);
+    if validateMask(mask); return; end
+    
+    took = "poly red";
+    mask = reconMask(colors.red);
+    if validateMask(mask); return; end
+        
+    took = "poly white";
+    mask = reconMask(colors.white);
+    if validateMask(mask); return; end
+    
+    took = "poly blue";
+    mask = reconMask(colors.blue);
     if validateMask(mask); return; end
     
     took = "Diff";
@@ -111,6 +112,6 @@ function [mask, ok] = circleMask(I)
     centre = centre(1,:);
     radius = radius(1,:);
     
-    [xx,yy] = ndgrid((1:w)-centre(2), (1:h)-centre(1));
+    [xx,yy] = ndgrid((1:h)-centre(2), (1:w)-centre(1));
     mask = (xx.^2 + yy.^2)<(radius^2);
 end
