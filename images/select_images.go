@@ -54,8 +54,9 @@ func main() {
 func createLinks(folder string, img int, files []int) {
 	for _, f := range files {
 		shared := filepath.Join(format(img), format(f))
+		ss := fmt.Sprintf("%s/%s_%s", format(img), format(img), format(f))
 		target := filepath.Join("..", "..", "All", shared)
-		filename := filepath.Join(folder, shared)
+		filename := filepath.Join(folder, ss)
 
 		err := os.MkdirAll(filepath.Dir(filename), 0700)
 		if err != nil {
