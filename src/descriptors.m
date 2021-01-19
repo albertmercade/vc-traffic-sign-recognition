@@ -1,189 +1,167 @@
-function desc = descriptors(I)
-    colors = splitColor(I);
-    
-    % Extract shape masks for background colors.
-    [mask.white, shape.white] = shapeMask(colors.white);
-    [mask.red, shape.red] = shapeMask(colors.red);
-    [mask.blue, shape.blue] = shapeMask(colors.blue);
-    
-    % Mask for white signals with red border
-    if string(shape.red) == string(shape.white)
-        mask.redWhite = mask.red & mask.white;
-    else
-        if shape.red == "circle"
-            mask.redWhite = mask.red;
-        elseif shape.white == "circle"
-            mask.redWhite = mask.white;
-        else
-            mask.redWhite = mask.red | mask.white;
+% Genera descriptors per la imatge donada
+
+function [desc, mask, colors] = descriptors(I)
+    G = rgb2gray(I);
+
+    desc = descriptorTriangle(G);
+    desc = descriptorCircle(desc, G);
+
+    [mask, colors] = maskFinder(I);
+    desc = maskDescriptors(desc, mask);
+    desc = descriptorColors(desc, colors, mask);
+end
+
+function [desc] = maskDescriptors(desc, shape)
+    % shape boundaries
+    b = cell2mat(bwboundaries(shape,'noholes'));
+
+    cent = size(shape)/2;
+
+    % euclidean distance
+    sign = sqrt((b(:, 1) - cent(1)).^2 + (b(:, 2) - cent(2)).^2);
+
+    % shift values so that min is the first element & scale in [0..1]
+    [~,idx] = min(sign);
+    sign = circshift(sign, -idx)/max(sign);
+
+    % smooth curve
+    sign = smoothdata(sign, 'sgolay');
+
+    % count peaks with promincene threshold
+    numPeaks = sum(islocalmax(sign, 'MinProminence', 0.03));
+
+    % new descriptors
+    desc.numPeaks = numPeaks;
+    desc.maxMinDiff = max(sign) - min(sign);
+end
+
+function [desc, centre, radius] = descriptorCircle(desc, I)
+    [height, width] = size(I);
+    [centre, radius] = imfindcircles(I, [int16(width/4) int16(width/2)], 'Sensitivity', 0.9);
+
+    if isempty(centre)
+        [centre, radius] = imfindcircles(I, [int16(width/4) int16(width/2)], 'ObjectPolarity', 'dark', 'Sensitivity', 0.9);
+        if isempty(centre)
+            centre = [0 0];
+            radius = 0;
         end
     end
-    
-    % Basic Signals (red white && blue)
-    
-    % Black on white (with red border)
-    symbols.blackWhiteR = colors.black & mask.redWhite;
-    % White on blue
-    symbols.whiteBlue = colors.white & mask.blue;
-    
-    % Special signals
-    
-    % red on white (9, 10)
-    symbols.redWhite = colors.red & mask.redWhite;
-    % white on red (14, 17)
-    symbols.whiteRed = colors.white & mask.red;
-    % Black on white (41, 42) (Without red)
-    symbols.blackWhite = colors.black & mask.white;
-    
-    % yellow on white (12)
-    symbols.yellowWhite = colors.yellow & mask.white;
-    
-    emptyShape.fg = emptyAuxFgStruct();
-    emptyShape.bg = emptyAuxBgStruct();
-    
-    desc.blackWhiteR = emptyShape;
-    desc.redWhite = emptyShape;
-    desc.blackWhite = emptyShape;
-    desc.yellowWhite = emptyShape;
-    desc.whiteBlue = emptyShape;
-    desc.whiteRed = emptyShape;
-    
-    if shape.white ~= "empty"
-        desc.blackWhiteR = descriptorsSymbols(symbols.blackWhiteR, mask.redWhite);
-        desc.redWhite = descriptorsSymbols(symbols.redWhite, mask.redWhite);
-        
-        desc.blackWhite = descriptorsSymbols(symbols.blackWhite, mask.white);
-        desc.yellowWhite = descriptorsSymbols(symbols.yellowWhite, mask.white);
-    end
-    
-    if shape.blue ~= "empty"
-        desc.whiteBlue = descriptorsSymbols(symbols.whiteBlue, mask.blue);
-    end
-    if shape.red ~= "empty"
-        desc.whiteRed = descriptorsSymbols(symbols.whiteRed, mask.red);
-    end
-    
-    desc.shape = shape;
-    
-    %desc.symbols = symbols;
-    
+
+    centre = centre(1,:);
+    radius = radius(1);
+
+    desc.CC = pdist([[height/2 width/2]; centre],'euclidean')/width;
+    desc.R = radius/width;
 end
 
-function emptyAux = emptyAuxBgStruct()
-    emptyAux = struct("Solidity", 2, "Eccentricity", 2, "EulerNumber", 2, "Extent", 0);
-end
-
-
-function emptyAux = emptyAuxFgStruct()
-    emptyAux.numel = 0;
-    
-    for i = 1:4
-        emptyAux.("CentroidDistanceX"+int2str(i)) = -1;
-        emptyAux.("CentroidDistanceY"+int2str(i)) = -1;
-        emptyAux.("Solidity"+int2str(i)) = 2;
-        emptyAux.("Eccentricity"+int2str(i)) = 2;
-        emptyAux.("EulerNumber"+int2str(i)) = 2;
-        emptyAux.("Extent"+int2str(i)) = 0;
-        emptyAux.("AreaCoverage" + int2str(i)) = 0;
-    end
-end
-
-function desc = descriptorsSymbols(symbols, background)
-    bg = bwareafilt(background==1, 1);
-    background = imfill(bg, 'holes');
-    
-    bgProps = regionprops(background, ...
-        'Centroid', 'Solidity', 'Eccentricity', 'EulerNumber', 'Extent', 'Area', 'BoundingBox');
-    
-    if isempty(bgProps)
-        desc.fg = emptyAuxFgStruct();
-        desc.bg = emptyAuxBgStruct();
-        return;
+function desc = descriptorColors(desc, colors, mask)
+    areaMask = sum(sum(mask));
+    if areaMask == 0
+        areaMask = 1;
     end
 
-    bgWidth = bgProps(1).BoundingBox(3);
+    names = ["white", "black"];
+    for i = 1:length(names)
+        C = colors.(names(i)) & mask;
 
-    symbols = bwareaopen(symbols, fix(bgProps(1).Area*0.02));
-    
-    symbols = bwmorph(symbols, 'close');
-    symbols = bwareafilt(symbols, 4);
-    
-    fgProps = regionprops(symbols, ...
+        C = bwareafilt(C, 4);
+
+        rp = regionprops(C, ...
         'Centroid', 'Solidity', 'Eccentricity', 'EulerNumber', 'Extent', 'Area');
-    
-    newFgProps.numel = size(fgProps,1);
-    
-    for i = 1:4
-        newFgProps.("CentroidDistance"+int2str(i)) = -1;
-        newFgProps.("Solidity"+int2str(i)) = 2;
-        newFgProps.("Eccentricity"+int2str(i)) = 2;
-        newFgProps.("EulerNumber"+int2str(i)) = 2;
-        newFgProps.("Extent"+int2str(i)) = 0;
-        newFgProps.("AreaCoverage" + int2str(i)) = 0;
-    end
-    
-    fgAux = struct2array(fgProps);
-    fgAux = reshape(fgAux,7,[])';
-    for i = 1:size(fgAux,1)
-        newFgProps.("CentroidDistanceX"+int2str(i)) = (fgAux(i,2) - bgProps.Centroid(1))/bgWidth;
-        newFgProps.("CentroidDistanceY"+int2str(i)) = (fgAux(i,3) - bgProps.Centroid(2))/bgWidth;
-        newFgProps.("Solidity"+int2str(i)) = fgAux(i,7);
-        newFgProps.("Eccentricity"+int2str(i)) = fgAux(i,4);
-        newFgProps.("EulerNumber"+int2str(i)) = fgAux(i,5);
-        newFgProps.("Extent"+int2str(i)) = fgAux(i,6);
-        newFgProps.("AreaCoverage" + int2str(i)) = fgAux(i,1)/bgProps.Area;
-    end
 
-    desc.bg = rmfield(bgProps,["Centroid", "Area", "BoundingBox"]);    
-    desc.fg = newFgProps;
-end
+        desc.numel = size(rp,1);
 
+        for j = 1:4
+            desc.(names(i)+"CentroidDistance"+int2str(j)) = -1;
+            desc.(names(i)+"Solidity"+int2str(j)) = 2;
+            desc.(names(i)+"Eccentricity"+int2str(j)) = 2;
+            desc.(names(i)+"EulerNumber"+int2str(j)) = 2;
+            desc.(names(i)+"Extent"+int2str(j)) = 0;
+            desc.(names(i)+"Coverage"+int2str(j)) = 0;
+        end
 
-function [mask, shape] = shapeMask(channel)
-    [height, width] = size(channel);
-    
-    [centre, radius] = imfindcircles(channel,[int16(width/7),int16(width/2)]);
-    
-    if (size(centre, 1) > 0 && sum((centre(1,:) - [height, width]/2).^2)^0.5 < width/5)
-        shape = 'circle';
-        mask = circleMask(centre(1,:), radius(1,:), [height, width]);
-    else
-        shape = 'poly';
-        mask = polyMask(channel, height, width, 5, 2.5);
-        if size(mask,1) == 1
-            shape = 'empty';
-            mask = false(height,width);
-            % mask = preprocessChannel(channel);
+        rpAux = struct2array(rp);
+        rpAux = reshape(rpAux,7,[])';
+        for j = 1:size(rpAux,1)
+            desc.(names(i)+"CentroidDistance"+int2str(j)) = pdist([rpAux(j,2:3);size(C)/2],'euclidean')/size(C,2);
+            desc.(names(i)+"Solidity"+int2str(j)) = rpAux(j,7);
+            desc.(names(i)+"Eccentricity"+int2str(j)) = rpAux(j,4);
+            desc.(names(i)+"EulerNumber"+int2str(j)) = rpAux(j,5);
+            desc.(names(i)+"Extent"+int2str(j)) = rpAux(j,6);
+            desc.(names(i)+"Coverage"+int2str(j)) = rpAux(j,1)/areaMask;
         end
     end
 
+    names = ["blue", "red"];
+    for i = 1:length(names)
+        C = colors.(names(i)) & mask;
+
+        C = bwareafilt(C, 1);
+
+        rp = regionprops(C, ...
+        'Centroid', 'Solidity', 'Eccentricity', 'EulerNumber', 'Extent', 'Area');
+
+        if isempty(rp)
+            desc.(names(i)+"CentroidDistance") = -1;
+            desc.(names(i)+"Solidity") = 2;
+            desc.(names(i)+"Eccentricity") = 2;
+            desc.(names(i)+"EulerNumber") = 2;
+            desc.(names(i)+"Extent") = 0;
+            desc.(names(i)+"Coverage") = 0;
+            continue;
+        end
+
+        rpAux = struct2array(rp);
+
+        desc.(names(i)+"CentroidDistance") = pdist([rpAux(2:3);size(C)/2],'euclidean')/size(C,2);
+        desc.(names(i)+"Solidity") = rpAux(5);
+        desc.(names(i)+"Eccentricity") = rpAux(4);
+        desc.(names(i)+"EulerNumber") = rpAux(5);
+        desc.(names(i)+"Extent") = rpAux(6);
+        desc.(names(i)+"Coverage") = rpAux(1)/areaMask;
+    end
 end
 
-function maskC = circleMask(centre, radius, size)
-    [xx,yy] = ndgrid((1:size(1))-centre(2),(1:size(2))-centre(1));
-    maskC = uint8((xx.^2 + yy.^2)<(radius^2));
+function desc = descriptorTriangle(channel)
+    [L, DC, H] = houghpoints(channel, [25:0.5:35]);
+    desc.DLL = L;
+    desc.DLDH = DC(1);
+    desc.DLDV = DC(2);
+    desc.DLH = H;
+
+    [L, DC, H] = houghpoints(channel, [-35:0.5:-25]);
+    desc.DRL = L;
+    desc.DRDH = DC(1);
+    desc.DRDV = DC(2);
+    desc.DRH = H;
+
+    [L, DC, H] = houghpoints(channel, [-85:-90, 84:89]);
+    desc.DHL = L;
+    desc.DHDH = DC(1);
+    desc.DHDV = DC(2);
+    desc.DHH = H;
 end
 
-function maskP = polyMask(channel, height, width, fg, ml)
+function [L, DC, PH] = houghpoints(channel, angle)
     CE = edge(channel,'canny');
 
-    [H,theta,rho] = hough(CE);
-    P = houghpeaks(H,5);
-    lines = houghlines(CE,theta,rho,P,'FillGap', width/fg,'MinLength', width/ml);
-    
-    p1 = struct2table(lines).point1;
-    p2 = struct2table(lines).point2;
-    Pch = [p1;p2];
-    
-    try
-        k = convhull(Pch);
-    catch
-        maskP = zeros(1);
+    width = size(channel,2);
+
+    [H,theta,rho] = hough(CE, 'Theta', angle);
+    P = houghpeaks(H,1, 'Theta', theta);
+    lines = houghlines(CE,theta,rho,P,'MinLength', width/6);
+
+    if isempty(lines)
+        L = 0;
+        DC = [1, 1];
+        PH = 0;
         return;
     end
-    
-    X = Pch(k,1);
-    Y = Pch(k,2);
 
-    maskP = poly2mask(X,Y,height,width);
+    p1 = struct2table(lines).point1(1,:);
+    p2 = struct2table(lines).point2(1,:);
+
+    L = pdist([p1; p2],'euclidean')/width;
+    DC = (p1 + p2)/(2 * width);
+    PH = H(P(1),P(2))/width;
 end

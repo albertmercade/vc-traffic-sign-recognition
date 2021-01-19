@@ -1,4 +1,4 @@
-function [M] = processFolder(filePattern)
+function [M] = GeneralFeatures(filePattern)
     theFiles = dir(filePattern);
 
     M = table();
@@ -14,8 +14,8 @@ function [M] = processFolder(filePattern)
         I = imread(fullFileName);
 
         I = preprocess(I);
-        
-        desc = newDescriptors(I);
+
+        desc = descriptors(I);
         desc = struct2table(desc, 'AsArray', true);
 
         M = [M; desc];
